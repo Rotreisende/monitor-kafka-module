@@ -1,8 +1,5 @@
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, LongDeserializer}
-//import ru.releaseSbtTest.user.User
-import util.AvroDeserializer
-
 import java.time.Duration
 import java.util.Properties
 import scala.collection.JavaConverters._
@@ -20,7 +17,7 @@ object Consumer {
 
   def main(args: Array[String]): Unit = {
     val kafkaConsumer = new KafkaConsumer[Long, Array[Byte]](prepareConsumerProps())
-    kafkaConsumer.subscribe(Seq("topic_1").asJava)
+    kafkaConsumer.subscribe(Seq("clients").asJava)
     kafkaConsumer.poll(Duration.ofMillis(0))
 
     while (true) {

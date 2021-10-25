@@ -1,11 +1,13 @@
 package spark
 
 import CheckBuilder._
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import util.User
+import validate.Validator.Instrument
 
 object DeequApp extends App {
-  val spark =
+  implicit val spark: SparkSession =
     SparkSession.builder()
       .master("local")
       .appName("suggestion")
@@ -19,11 +21,31 @@ object DeequApp extends App {
       .csv(path)
   }
 
-  val errorsDf = readCsv("kafka-playground/src/main/resources/errors.csv")(spark)
-  val dataDf = readCsv("kafka-playground/src/main/resources/data.csv")(spark)
+  val errorsDf = readCsv("src/main/resources/errors.csv")
+  val dataDf = readCsv("src/main/resources/data.csv")
 
-  val result = dataDf.getCheckResult(errorsDf)(spark)
+  val result = dataDf.getCheckResult(errorsDf)
 
-  //dataDf.foreach(row => println(Instrument(errorsDf).validate(row)))// not work
-  //println(Instrument(errorsDf).validate(dataDf.collect().head))// work
+  val filterUsers = dataDf.collect().filter(row => Instrument(errorsDf).validate(row))
+
+  val usersRdd = spark.sparkContext.parallelize(filterUsers)
+  val usersDf = spark.createDataFrame(usersRdd, dataDf.schema)
+
+  import spark.implicits._
+  val usersDataset = usersDf.as[User]
+
+  val schemaString = StructType(Seq(
+    StructField("key", StringType),
+    StructField("value", StringType)
+  ))
+
+  val stringRdd = spark.sparkContext.parallelize(Seq(Row("1", "qwe"), Row("2", "rty")))
+  val dataFrame = spark.createDataFrame(stringRdd, schemaString)
+  dataFrame
+    .write
+    .format("kafka")
+    .option("kafka.bootstrap.servers", "localhost:9092")
+    .option("topic", "topic-string")
+    .option("group.id", "string")
+    .save()
 }

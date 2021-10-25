@@ -1,7 +1,9 @@
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig}
 import org.apache.kafka.common.serialization.{ByteArraySerializer, LongSerializer}
-import org.apache.spark.sql.SparkSession
-import spark.DeequApp.readCsv
+import org.apache.spark.sql.streaming.StreamingQuery
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import spark.DeequApp.{readCsv, spark, dataDf}
 
 import java.util.Properties
 
@@ -19,12 +21,24 @@ object Producer {
     new KafkaProducer[Long, Array[Byte]](prepareProducerProps())
   }
 
-  def main(args: Array[String]): Unit = {
-    val producer = createProducer()
-    implicit val sparkSession: SparkSession = ???
+  def write(df: DataFrame): Unit = {
+//    df
+//      .writeStream
+//      .format("kafka")
+//      .option("kafka.bootstrap.servers", "localhost:9092")
+//      .option("topic", "clients")
+//      .start()
+    df.show()
+  }
 
-    val errorsDf = readCsv("kafka-playground/src/main/resources/errors.csv")
-    val dataDf = readCsv("kafka-playground/src/main/resources/data.csv")
+  def testDataFrame(): DataFrame = {
+    val sparkSession = SparkSession.builder().master("local").appName("suggestion").getOrCreate()
+    readCsv("src/main/resources/data.csv")(sparkSession)
+  }
+
+  def main(args: Array[String]): Unit = {
+    write(testDataFrame())
+//    val producer = createProducer()
 //    try {
 //      val user = User(UUID.randomUUID().toString, "Ivanov", "Ivan", None, 18)
 //      producer.send(new ProducerRecord[Long, Array[Byte]]("topic_1", 2, AvroSerializer.toByteArray(user)))
