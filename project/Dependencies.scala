@@ -32,6 +32,14 @@ object Dependencies {
     "org.apache.flink" %% "flink-connector-kafka" % versions.flink_connector,
   )
 
+  lazy val myAvro = Seq(
+    "org.me" %% "monitor-avro" % "1.0.0"
+  )
+
+  lazy val kafkaSparkConnector = Seq(
+    "org.apache.spark" %% "spark-sql-kafka-0-10" % versions.spark % Test
+  )
+
   lazy val sparkSet: Seq[ModuleID] =
     avro ++ kafka ++ spark ++ deequ ++ jackson
 
@@ -39,7 +47,7 @@ object Dependencies {
   object versions {
     val flink = "1.13.2"
     val flink_connector = "1.13.1"
-    val spark = "3.1.2"
+    val spark = "3.2.0"
     val avro = "1.10.2"
     val kafka = "2.8.0"
     val deequ = "1.2.2-spark-3.0"
